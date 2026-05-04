@@ -1,5 +1,6 @@
 package br.com.alura.screenmatch;
 
+import br.com.alura.screenmatch.model.DadosEpisodio;
 import br.com.alura.screenmatch.model.DadosSerie;
 import br.com.alura.screenmatch.service.ConsumoApi;
 import br.com.alura.screenmatch.service.ConverterDados;
@@ -13,9 +14,11 @@ public class ScreenmatchApplication {
         SpringApplication.run(ScreenmatchApplication.class, args);
 	}
 
-    public void run(String... args) throws Exception{
-        var consumoapi = new ConsumoApi();
-        var json = consumoapi.obterDados("http://www.omdbapi.com/?i=Divertidamente&apikey=55c1ce18");
+    public void run(String... args) throws Exception {
+        var consumoApi = new ConsumoApi();
+        var json = consumoApi.obterDados("https://www.omdbapi.com/?i=tt3896198&apikey=55c1ce18");
+//		System.out.println(json);
+//		json = consumoApi.obterDados("https://coffee.alexflipnote.dev/random.json");
         System.out.println(json);
         ConverterDados conversor = new ConverterDados();
         DadosSerie dados = conversor.obterDados(json, DadosSerie.class);
