@@ -17,9 +17,11 @@ public class Principal {
     private ConsumoApi consumo = new ConsumoApi();
     private ConverteDados conversor = new ConverteDados();
     private final String ENDERECO = "https://www.omdbapi.com/?t=";
-    private final String API_KEY = "&apikey=6585022c";
+    private final String API_KEY = "&apikey=55c1ce18";
     private List<DadosSerie> dadosSeries = new ArrayList<>();
     private SerieRepository repositorio;
+
+    private List<Serie> series = new ArrayList<>();
 
     public Principal(SerieRepository repositorio) {
         this.repositorio = repositorio;
@@ -28,7 +30,7 @@ public class Principal {
 
     public void exibeMenu() {
         var opcao = -1;
-        while (opcao != 0){
+        while (opcao != 0) {
             var menu = """
                     1 - Buscar séries
                     2 - Buscar episódios
@@ -91,11 +93,11 @@ public class Principal {
     private void listarseriesbuscadas(){
         List<Serie> series = new ArrayList<>();
         series = dadosSeries.stream()
-                        .map(d -> new Serie(d))
-                                .collect(Collectors.toList());
+                .map(d -> new Serie(d))
+                .collect(Collectors.toList());
 
         series.stream()
-                .sorted(Comparator.comparing(Serie::getGenrero))
+                .sorted(Comparator.comparing(Serie::getGenero))
                 .forEach(System.out::println);
     }
 }

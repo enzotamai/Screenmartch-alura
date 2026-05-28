@@ -9,29 +9,29 @@ import java.util.OptionalDouble;
 
 @Entity
 @Table(name = "series")
-
 public class Serie {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
     private Long id;
-    @Column(unique = true)
     private String titulo;
     private Integer totalTemporadas;
     private Double avaliacao;
     @Enumerated(EnumType.STRING)
-    private Categoria genrero;
+    private Categoria genero;
     private String atores;
     private String poster;
     private String sinopse;
-    @Transient
-    private List<Episodio> episodio = new ArrayList<>();
+
+    @OneToMany(mappedBy = "serie", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<Episodio> episodios = new ArrayList<>();
+
+    public Serie() {}
 
     public Serie(DadosSerie dadosSerie){
         this.titulo = dadosSerie.titulo();
         this.totalTemporadas = dadosSerie.totalTemporadas();
         this.avaliacao = OptionalDouble.of(Double.valueOf(dadosSerie.avaliacao())).orElse(0);
-        this.genrero = Categoria.fromString(dadosSerie.genrero().split(",")[0].trim());
+        this.genero = Categoria.fromString(dadosSerie.genero().split(",")[0].trim());
         this.atores = dadosSerie.atores();
         this.poster = dadosSerie.poster();
         this.sinopse = dadosSerie.sinopse();
@@ -45,12 +45,13 @@ public class Serie {
         this.id = id;
     }
 
-    public List<Episodio> getEpisodio() {
-        return episodio;
+    public List<Episodio> getEpisodios() {
+        return episodios;
     }
 
-    public void setEpisodio(List<Episodio> episodio) {
-        this.episodio = episodio;
+    public void setEpisodios(List<Episodio> episodios) {
+        episodios.forEach(e -> e.setSerie(this));
+        this.episodios = episodios;
     }
 
     public String getTitulo() {
@@ -77,12 +78,12 @@ public class Serie {
         this.avaliacao = avaliacao;
     }
 
-    public Categoria getGenrero() {
-        return genrero;
+    public Categoria getGenero() {
+        return genero;
     }
 
-    public void setGenrero(Categoria genrero) {
-        this.genrero = genrero;
+    public void setGenero(Categoria genero) {
+        this.genero = genero;
     }
 
     public String getAtores() {
@@ -111,13 +112,14 @@ public class Serie {
 
     @Override
     public String toString() {
-        return" genrero=" + genrero +
-                ", titulo='" + titulo + '\'' +
-                ", totalTemporadas=" + totalTemporadas +
-                ", avaliacao=" + avaliacao +
-
-                ", atores='" + atores + '\'' +
-                ", poster='" + poster + '\'' +
-                ", sinopse='" + sinopse + '\'';
+        return
+                "genero=" + genero +
+                        ", titulo='" + titulo + '\'' +
+                        ", totalTemporadas=" + totalTemporadas +
+                        ", avaliacao=" + avaliacao +
+                        ", atores='" + atores + '\'' +
+                        ", poster='" + poster + '\'' +
+                        ", sinopse='" + sinopse + '\'' +
+                        ", episodios='" + episodios + '\'';
     }
 }
