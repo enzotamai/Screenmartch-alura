@@ -37,6 +37,9 @@ public class Principal {
                     3 - Buscar lista das série
                     4 - Buscar serie por titulo
                     5 - Bsucar serie por ator
+                    6 - top 5 series
+                    7 - Buscar series por categoria
+                    8 - Filtrar séries
                     
                     0 - Sair                                 
                     """;
@@ -53,13 +56,22 @@ public class Principal {
                     buscarEpisodioPorSerie();
                     break;
                 case 3:
-                    listarseriesbuscadas();
+                    listarSeriesBuscadas();
                     break;
                 case 4:
                     buscarSeriePorTitulo();
                     break;
                 case 5:
-                    buscarSeriePorAtor();
+                    buscarSeriesPorAtor();
+                    break;
+                case 6:
+                    buscarTop5Series();
+                    break;
+                case 7:
+                    buscarSeriesPorCategoria();
+                    break;
+                case 8:
+                    filtrarSeriesPorTemporadaEAvaliacao();
                     break;
                 case 0:
                     System.out.println("Saindo...");
@@ -90,13 +102,14 @@ public class Principal {
     }
 
     private void buscarEpisodioPorSerie(){
-        listarseriesbuscadas();
-        System.out.println("Escolha uma serie pelo nome: ");
+        listarSeriesBuscadas();
+        System.out.println("Escolha uma série pelo nome");
         var nomeSerie = leitura.nextLine();
 
         Optional<Serie> serie = repositorio.findByTituloContainingIgnoreCase(nomeSerie);
 
-        if (serie.isPresent()){
+        if(serie.isPresent()) {
+
             var serieEncontrada = serie.get();
             List<DadosTemporada> temporadas = new ArrayList<>();
 
@@ -106,43 +119,78 @@ public class Principal {
                 temporadas.add(dadosTemporada);
             }
             temporadas.forEach(System.out::println);
+
+            List<Episodio> episodios = temporadas.stream()
+                    .flatMap(d -> d.episodios().stream()
+                            .map(e -> new Episodio(d.numero(), e)))
+                    .collect(Collectors.toList());
+
+            serieEncontrada.setEpisodios(episodios);
+            repositorio.save(serieEncontrada);
+        } else {
+            System.out.println("Série não encontrada!");
         }
-
-
     }
 
-    private void listarseriesbuscadas(){
-        List<Serie> series = new ArrayList<>();
-        series = dadosSeries.stream()
-                .map(d -> new Serie(d))
-                .collect(Collectors.toList());
-
+    private void listarSeriesBuscadas(){
+        series = repositorio.findAll();
         series.stream()
                 .sorted(Comparator.comparing(Serie::getGenero))
                 .forEach(System.out::println);
     }
 
     private void buscarSeriePorTitulo() {
-        System.out.println("Escolha uma série pelo nome");
+        System.out.println("Escolha um série pelo nome: ");
         var nomeSerie = leitura.nextLine();
         Optional<Serie> serieBuscada = repositorio.findByTituloContainingIgnoreCase(nomeSerie);
 
-        if (serieBuscada.isPresent()){
-            System.out.println("Dados da serie: " + serieBuscada.get());
+        if (serieBuscada.isPresent()) {
+            System.out.println("Dados da série: " + serieBuscada.get());
 
-        }else {
-            System.out.println("Serie não encontrada");
+        } else {
+            System.out.println("Série não encontrada!");
         }
+
     }
 
-    private void buscarSeriePorAtor() {
-        System.out.println("Qual o nome para a busca: ");
+    private void buscarSeriesPorAtor() {
+        System.out.println("Qual o nome para busca?");
         var nomeAtor = leitura.nextLine();
-        System.out.println("Avaliações a partir de qual valor? ");
+        System.out.println("Avaliações a partir de que valor? ");
         var avaliacao = leitura.nextDouble();
-        List<Serie> serieEcnontrada = repositorio.findByAtoresContainingIgnoreCaseAndAvaliacaoGreaterThanEqual(nomeAtor, avaliacao);
-        System.out.println("Series em que " + nomeAtor + " trabalhou: ");
-        serieEcnontrada.forEach(s ->
-                System.out.println(s.getTitulo() + " Avaliação: " + s.getAvaliacao()));
+        List<Serie> seriesEncontradas = repositorio.findByAtoresContainingIgnoreCaseAndAvaliacaoGreaterThanEqual(nomeAtor, avaliacao);
+        System.out.println("Séries em que " + nomeAtor + " trabalhou: ");
+        seriesEncontradas.forEach(s ->
+                System.out.println(s.getTitulo() + " avaliação: " + s.getAvaliacao()));
     }
+
+    private void buscarTop5Series() {
+        List<Serie> serieTop = repositorio.findTop5ByOrderByAvaliacaoDesc();
+        serieTop.forEach(s ->
+                System.out.println(s.getTitulo() + " avaliação: " + s.getAvaliacao()));
+    }
+
+    private void buscarSeriesPorCategoria() {
+        System.out.println("Deseja buscar séries de que categoria/gênero? ");
+        var nomeGenero = leitura.nextLine();
+        Categoria categoria = Categoria.fromPortugues(nomeGenero);
+        List<Serie> seriesPorCategoria = repositorio.findByGenero(categoria);
+        System.out.println("Séries da categoria " + nomeGenero);
+        seriesPorCategoria.forEach(System.out::println);
+    }
+
+    private void filtrarSeriesPorTemporadaEAvaliacao(){
+        System.out.println("Filtrar séries até quantas temporadas? ");
+        var totalTemporadas = leitura.nextInt();
+        leitura.nextLine();
+        System.out.println("Com avaliação a partir de que valor? ");
+        var avaliacao = leitura.nextDouble();
+        leitura.nextLine();
+        List<Serie> filtroSeries = repositorio.seriesPorTemporadasEAvaliacao(totalTemporadas, avaliacao);
+        System.out.println("*** Séries filtradas ***");
+        filtroSeries.forEach(s ->
+                System.out.println(s.getTitulo() + "  - avaliação: " + s.getAvaliacao()));
+    }
+    
+
 }
